@@ -1,0 +1,168 @@
+.app {
+  min-height: 100vh;
+}
+
+/* ---------- Navbar ---------- */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0e1b3d;
+  padding: 0 2rem;
+  height: 64px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 10;
+}
+
+.brand {
+  color: #f2c94c;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.nav-list {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.nav-item {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #e8e9ee;
+  font-size: 0.92rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: rgba(242, 201, 76, 0.12);
+  color: #f2c94c;
+}
+
+.caret {
+  font-size: 0.7rem;
+  transition: transform 0.15s ease;
+}
+
+.caret-open {
+  transform: rotate(180deg);
+}
+
+/* ---------- Dropdown ---------- */
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.dropdown-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.dropdown-link {
+  display: block;
+  padding: 0.7rem 1rem;
+  color: #1c2333;
+  font-size: 0.88rem;
+  border-bottom: 1px solid #eee;
+}
+
+.dropdown-link:last-child {
+  border-bottom: none;
+}
+
+.dropdown-link:hover {
+  background: #f6f5f2;
+  color: #0e1b3d;
+  font-weight: 600;
+}
+
+/* ---------- Pages ---------- */
+
+main {
+  padding: 3rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page h1 {
+  color: #0e1b3d;
+  font-size: 1.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.page p {
+  color: #444b5e;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.page-home {
+  text-align: left;
+}
+
+/* ---------- Quick Facts panel ---------- */
+
+.quick-facts {
+  margin-top: 1.75rem;
+  background: #ffffff;
+  border-left: 4px solid #f2c94c;
+  border-radius: 6px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.quick-facts h2 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0e1b3d;
+  margin-bottom: 0.6rem;
+}
+
+.quick-facts ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.quick-facts li {
+  font-size: 0.95rem;
+  color: #444b5e;
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.quick-facts li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: #f2c94c;
+  font-weight: 700;
+}
