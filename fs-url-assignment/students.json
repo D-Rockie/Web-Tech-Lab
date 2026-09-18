@@ -1,0 +1,7 @@
+[
+  { "name": "Arun",    "dept": "CSE",   "cgpa": 8.4 },
+  { "name": "Meena",   "dept": "AI&DS", "cgpa": 9.1 },
+  { "name": "Karthik", "dept": "CSE",   "cgpa": 7.6 },
+  { "name": "Divya",   "dept": "ECE",   "cgpa": 8.9 },
+  { "name": "Rahul",   "dept": "CSE",   "cgpa": 9.3 }
+]

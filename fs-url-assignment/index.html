@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>fs and url modules in Node.js</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Working with Files and URLs in Node.js</h1>
+  <span>Web Technology Assignment &middot; Devaesh D</span>
+</div>
+
+<div class="layout">
+
+  <!-- left side menu -->
+  <aside class="sidebar">
+    <p class="menu-head">fs module</p>
+    <a href="#fs-intro">Introduction</a>
+    <a href="#fs-read">Reading a file</a>
+    <a href="#fs-write">Writing and appending</a>
+    <a href="#fs-manage">Copy, rename, delete</a>
+    <a href="#fs-folders">Folders</a>
+    <a href="#fs-info">Checking file details</a>
+    <a href="#fs-styles">Sync vs callback vs promise</a>
+
+    <p class="menu-head">url module</p>
+    <a href="#url-intro">Introduction</a>
+    <a href="#url-parts">Parts of a URL</a>
+    <a href="#url-query">Query parameters</a>
+    <a href="#url-build">Changing / building URLs</a>
+    <a href="#url-other">Other helper methods</a>
+    <a href="#url-try">Try it yourself</a>
+
+    <p class="menu-head">Use cases</p>
+    <a href="#case-1">Static file server</a>
+    <a href="#case-2">Visit counter</a>
+    <a href="#case-3">Search from a JSON file</a>
+    <a href="#case-4">Request logger</a>
+  </aside>
+
+  <main class="content">
+
+    <!-- ================= FS MODULE ================= -->
+    <h2 class="part-title">Part A &mdash; The fs (File System) module</h2>
+
+    <section id="fs-intro">
+      <h3>Introduction</h3>
+      <p>
+        JavaScript in the browser is not allowed to touch files on your computer.
+        Node.js runs on the server side, so it can, and <code>fs</code> is the built-in
+        module used for that. No npm install is needed, we just import it.
+      </p>
+<pre>
+const fs = require('fs');                 // callback + sync versions
+const fsp = require('fs/promises');       // promise version (works with async/await)
+</pre>
+      <p>Almost every operation comes in three forms:</p>
+      <table>
+        <tr><th>Form</th><th>Example</th><th>Behaviour</th></tr>
+        <tr><td>Callback</td><td><code>fs.readFile(path, cb)</code></td><td>Non-blocking, result comes in a callback</td></tr>
+        <tr><td>Synchronous</td><td><code>fs.readFileSync(path)</code></td><td>Blocks the program until it finishes</td></tr>
+        <tr><td>Promise</td><td><code>fsp.readFile(path)</code></td><td>Non-blocking, used with <code>await</code></td></tr>
+      </table>
+    </section>
+
+    <section id="fs-read">
+      <h3>1. Reading a file</h3>
+      <p>
+        <code>readFile</code> loads the whole file into memory. If we don't pass an
+        encoding like <code>'utf8'</code>, we get a Buffer (raw bytes) instead of text.
+      </p>
+<pre>
+fs.readFile('notes.txt', 'utf8', (err, text) =&gt; {
+  if (err) {
+    console.log('Could not read file:', err.message);
+    return;
+  }
+  console.log(text);
+});
+</pre>
+      <p>
+        For very large files (logs, videos) reading everything at once is a bad idea,
+        so we read it in chunks using a stream:
+      </p>
+<pre>
+const stream = fs.createReadStream('big-log.txt', 'utf8');
+stream.on('data', chunk =&gt; console.log('got', chunk.length, 'characters'));
+stream.on('end', () =&gt; console.log('finished reading'));
+</pre>
+    </section>
+
+    <section id="fs-write">
+      <h3>2. Writing and appending</h3>
+      <p>
+        <code>writeFile</code> creates the file if it is not there, and <b>replaces</b>
+        the old content if it is. <code>appendFile</code> adds to the end and keeps
+        what was already there.
+      </p>
+<pre>
+// replaces the content
+fs.writeFileSync('marks.txt', 'Name,Marks\n');
+
+// adds new lines at the bottom
+fs.appendFileSync('marks.txt', 'Arun,78\n');
+fs.appendFileSync('marks.txt', 'Meena,91\n');
+
+console.log(fs.readFileSync('marks.txt', 'utf8'));
+</pre>
+      <p class="note">
+        Common mistake: using writeFile inside a loop to add rows. Each call wipes the
+        file, so only the last row survives. Use appendFile for that.
+      </p>
+      <p>Saving an object as JSON is also just a write:</p>
+<pre>
+const student = { name: 'Arun', dept: 'AI&amp;DS', year: 2 };
+fs.writeFileSync('student.json', JSON.stringify(student, null, 2));
+</pre>
+    </section>
+
+    <section id="fs-manage">
+      <h3>3. Copy, rename and delete</h3>
+<pre>
+fs.copyFileSync('marks.txt', 'marks-backup.txt');   // copy
+fs.renameSync('marks-backup.txt', 'old-marks.txt'); // rename (also used to move)
+fs.unlinkSync('old-marks.txt');                     // delete
+</pre>
+      <p>
+        <code>rename</code> can move a file into another folder by giving a new path,
+        e.g. <code>fs.renameSync('a.txt', 'archive/a.txt')</code>. There is no
+        "delete" function by that name, deleting a file is called <code>unlink</code>.
+      </p>
+    </section>
+
+    <section id="fs-folders">
+      <h3>4. Working with folders</h3>
+<pre>
+// make a folder (recursive: true also creates parent folders, no error if it exists)
+fs.mkdirSync('uploads/2026', { recursive: true });
+
+// list what is inside a folder
+const items = fs.readdirSync('.');
+console.log(items);
+
+// remove a folder along with everything inside
+fs.rmSync('uploads', { recursive: true, force: true });
+</pre>
+    </section>
+
+    <section id="fs-info">
+      <h3>5. Checking file details</h3>
+      <p>
+        <code>fs.stat</code> gives information about a file without opening it.
+        <code>fs.existsSync</code> is a quick yes/no check.
+      </p>
+<pre>
+if (fs.existsSync('marks.txt')) {
+  const info = fs.statSync('marks.txt');
+  console.log('size      :', info.size, 'bytes');
+  console.log('is file   :', info.isFile());
+  console.log('is folder :', info.isDirectory());
+  console.log('modified  :', info.mtime.toLocaleString());
+}
+</pre>
+    </section>
+
+    <section id="fs-styles">
+      <h3>6. Sync vs callback vs promise &mdash; which one to use?</h3>
+      <p>The same task (read a file, count its lines) written all three ways:</p>
+<pre>
+// sync - simple, but the server can't do anything else while waiting
+const data = fs.readFileSync('marks.txt', 'utf8');
+console.log(data.split('\n').length);
+
+// callback - older style, nesting gets messy with many steps
+fs.readFile('marks.txt', 'utf8', (err, data) =&gt; {
+  if (!err) console.log(data.split('\n').length);
+});
+
+// promise with async/await - reads top to bottom, errors go to try/catch
+async function countLines() {
+  try {
+    const data = await fsp.readFile('marks.txt', 'utf8');
+    console.log(data.split('\n').length);
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+</pre>
+      <p>
+        Sync versions are fine for small scripts and for loading config once when the
+        app starts. Inside a server that handles requests, the async versions should be
+        used, otherwise one slow file read holds up every other user.
+      </p>
+    </section>
+
+    <!-- ================= URL MODULE ================= -->
+    <h2 class="part-title">Part B &mdash; The url module</h2>
+
+    <section id="url-intro">
+      <h3>Introduction</h3>
+      <p>
+        When a request comes to a Node server, we only get the URL as one long string.
+        The <code>url</code> module splits that string into its parts so we can find out
+        which page was asked for and what values were sent in the query string.
+        The main thing we use is the <code>URL</code> class. It is available globally,
+        and the same class also exists in the browser.
+      </p>
+<pre>
+const link = new URL('https://shop.example.com:8080/books/search?title=node&amp;page=2#reviews');
+</pre>
+      <p>
+        If the string is not a valid URL, <code>new URL()</code> throws a
+        <code>TypeError</code>, so user input should be wrapped in try/catch.
+        For a relative path like <code>/about</code> we must also give a base:
+        <code>new URL('/about', 'http://localhost:3000')</code>.
+      </p>
+    </section>
+
+    <section id="url-parts">
+      <h3>1. Parts of a URL</h3>
+      <p>For the URL above, these are the properties we get:</p>
+      <table>
+        <tr><th>Property</th><th>Value</th></tr>
+        <tr><td><code>href</code></td><td>the full URL</td></tr>
+        <tr><td><code>protocol</code></td><td>https:</td></tr>
+        <tr><td><code>host</code></td><td>shop.example.com:8080</td></tr>
+        <tr><td><code>hostname</code></td><td>shop.example.com</td></tr>
+        <tr><td><code>port</code></td><td>8080</td></tr>
+        <tr><td><code>pathname</code></td><td>/books/search</td></tr>
+        <tr><td><code>search</code></td><td>?title=node&amp;page=2</td></tr>
+        <tr><td><code>hash</code></td><td>#reviews</td></tr>
+        <tr><td><code>origin</code></td><td>https://shop.example.com:8080</td></tr>
+      </table>
+      <p class="note">
+        <code>port</code> is an empty string when the default port is used (80 for http,
+        443 for https). Also note <code>host</code> includes the port but
+        <code>hostname</code> does not.
+      </p>
+    </section>
+
+    <section id="url-query">
+      <h3>2. Query parameters (searchParams)</h3>
+      <p>
+        Everything after the <code>?</code> is available as <code>link.searchParams</code>,
+        which is a <code>URLSearchParams</code> object. Values always come back as strings.
+      </p>
+<pre>
+const q = new URL('https://site.com/products?cat=shoes&amp;size=8&amp;size=9').searchParams;
+
+q.get('cat');        // 'shoes'
+q.get('size');       // '8'  (only the first one)
+q.getAll('size');    // ['8', '9']
+q.has('color');      // false
+q.get('color');      // null
+
+for (const [key, value] of q) {
+  console.log(key, '=', value);
+}
+</pre>
+      <table>
+        <tr><th>Method</th><th>What it does</th></tr>
+        <tr><td><code>get(name)</code></td><td>first value for that key, or null</td></tr>
+        <tr><td><code>getAll(name)</code></td><td>all values as an array</td></tr>
+        <tr><td><code>has(name)</code></td><td>true / false</td></tr>
+        <tr><td><code>set(name, value)</code></td><td>sets the value, removes duplicates</td></tr>
+        <tr><td><code>append(name, value)</code></td><td>adds another value, keeps existing</td></tr>
+        <tr><td><code>delete(name)</code></td><td>removes the key</td></tr>
+        <tr><td><code>sort()</code></td><td>sorts keys alphabetically</td></tr>
+        <tr><td><code>toString()</code></td><td>gives back <code>a=1&amp;b=2</code> form</td></tr>
+      </table>
+      <p class="note">
+        Since values are strings, <code>q.get('page') + 1</code> gives <code>'21'</code>,
+        not <code>3</code>. Convert with <code>Number()</code> first.
+      </p>
+    </section>
+
+    <section id="url-build">
+      <h3>3. Changing and building URLs</h3>
+      <p>
+        The properties can also be assigned. This is safer than joining strings by hand
+        because special characters (spaces, &amp;, etc.) get encoded automatically.
+      </p>
+<pre>
+const api = new URL('https://api.example.com');
+api.pathname = '/v1/movies';
+api.searchParams.set('genre', 'sci-fi');
+api.searchParams.set('q', 'star wars &amp; more');
+api.searchParams.append('year', '2024');
+
+console.log(api.href);
+// https://api.example.com/v1/movies?genre=sci-fi&amp;q=star+wars+%26+more&amp;year=2024
+</pre>
+      <p>
+        <code>URLSearchParams</code> can also be created on its own, which is handy for
+        form data:
+      </p>
+<pre>
+const form = new URLSearchParams({ user: 'dev', city: 'Chennai' });
+form.toString();   // 'user=dev&amp;city=Chennai'
+</pre>
+    </section>
+
+    <section id="url-other">
+      <h3>4. Other helper methods</h3>
+<pre>
+const url = require('url');
+
+// older API still seen in many tutorials - deprecated, prefer new URL()
+const old = url.parse('http://localhost:3000/login?next=/home', true);
+console.log(old.pathname, old.query.next);   // /login /home
+
+// object back to a string
+url.format({ protocol: 'http', hostname: 'localhost', port: 3000, pathname: '/about' });
+// 'http://localhost:3000/about'
+
+// convert between file paths and file:// URLs
+url.pathToFileURL('/home/dev/report.pdf').href;       // 'file:///home/dev/report.pdf'
+url.fileURLToPath('file:///home/dev/report.pdf');      // '/home/dev/report.pdf'
+
+// check if a string is a valid URL without try/catch (Node 19.9+)
+URL.canParse('not a url');   // false
+</pre>
+    </section>
+
+    <section id="url-try">
+      <h3>5. Try it yourself</h3>
+      <p>Type any URL below. The page uses the same <code>URL</code> class to split it.</p>
+      <div class="try-box">
+        <input id="urlInput" type="text"
+               value="https://www.youtube.com/watch?v=abc123&amp;t=45s&amp;list=PL9#comments">
+        <button id="parseBtn">Break it down</button>
+        <div id="urlResult"></div>
+      </div>
+    </section>
+
+    <!-- ================= USE CASES ================= -->
+    <h2 class="part-title">Part C &mdash; Where these are actually used</h2>
+
+    <section id="case-1">
+      <h3>Use case 1: Serving pages from a folder (mini static server)</h3>
+      <p>
+        The URL tells us which page the user wants; fs reads that file from a
+        <code>public</code> folder and sends it back. If the file isn't there we send a 404.
+      </p>
+<pre>
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+http.createServer((req, res) =&gt; {
+  const { pathname } = new URL(req.url, 'http://localhost');
+  const page = pathname === '/' ? 'index.html' : pathname.slice(1);
+
+  // path.basename stops requests like /../../secret.txt from leaving the folder
+  const filePath = path.join(__dirname, 'public', path.basename(page));
+
+  fs.readFile(filePath, (err, content) =&gt; {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      return res.end('Page not found');
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(content);
+  });
+}).listen(3000);
+</pre>
+    </section>
+
+    <section id="case-2">
+      <h3>Use case 2: Page visit counter saved in a file</h3>
+      <p>
+        Variables are lost when the server restarts, so the count is kept in a JSON
+        file. Each request reads it, increases the count for that path, and writes it back.
+      </p>
+<pre>
+const COUNT_FILE = 'visits.json';
+
+function countVisit(pathname) {
+  let visits = {};
+  if (fs.existsSync(COUNT_FILE)) {
+    visits = JSON.parse(fs.readFileSync(COUNT_FILE, 'utf8'));
+  }
+  visits[pathname] = (visits[pathname] || 0) + 1;
+  fs.writeFileSync(COUNT_FILE, JSON.stringify(visits, null, 2));
+  return visits[pathname];
+}
+
+// inside the server
+const { pathname } = new URL(req.url, 'http://localhost');
+res.end(`This page has been visited ${countVisit(pathname)} times`);
+</pre>
+    </section>
+
+    <section id="case-3">
+      <h3>Use case 3: Filtering data using the query string</h3>
+      <p>
+        A request like <code>/students?dept=CSE&amp;minCgpa=8</code> should return only
+        matching students. The list is stored in <code>students.json</code>.
+      </p>
+<pre>
+http.createServer(async (req, res) =&gt; {
+  const reqUrl = new URL(req.url, 'http://localhost');
+
+  if (reqUrl.pathname === '/students') {
+    const all = JSON.parse(await fsp.readFile('students.json', 'utf8'));
+    const dept = reqUrl.searchParams.get('dept');
+    const minCgpa = Number(reqUrl.searchParams.get('minCgpa') || 0);
+
+    const result = all.filter(s =&gt;
+      (!dept || s.dept === dept) &amp;&amp; s.cgpa &gt;= minCgpa
+    );
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(result));
+  }
+}).listen(3000);
+</pre>
+    </section>
+
+    <section id="case-4">
+      <h3>Use case 4: Logging every request to a daily log file</h3>
+      <p>
+        Useful for seeing who visited what. A new log file is made each day, and
+        appendFile keeps adding lines to it.
+      </p>
+<pre>
+function logRequest(req) {
+  const u = new URL(req.url, `http://${req.headers.host}`);
+  const today = new Date().toISOString().slice(0, 10);   // e.g. 2026-09-18
+  const line = `${new Date().toLocaleTimeString()}  ${req.method}  ${u.pathname}  ${u.search}\n`;
+
+  fs.mkdirSync('logs', { recursive: true });
+  fs.appendFile(`logs/${today}.log`, line, err =&gt; {
+    if (err) console.log('log failed:', err.message);
+  });
+}
+</pre>
+    </section>
+
+  </main>
+</div>
+
+<button id="topBtn" title="Back to top">&uarr;</button>
+
+<script src="app.js"></script>
+</body>
+</html>
