@@ -1,0 +1,42 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #f1f4f9;
+  color: #1f2937;
+}
+.app {
+  max-width: 560px;
+  margin: 48px auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+}
+header h1 { margin: 0; font-size: 1.7rem; color: #13aa52; }
+.stats { margin: 4px 0 20px; color: #6b7280; font-size: 0.9rem; }
+.task-form { display: flex; gap: 10px; margin-bottom: 18px; }
+.task-form input {
+  flex: 1; padding: 10px 12px; font-size: 1rem;
+  border: 1px solid #d1d5db; border-radius: 8px; outline: none;
+}
+.task-form input:focus { border-color: #13aa52; }
+.task-form button {
+  padding: 10px 18px; font-size: 1rem; font-weight: 600;
+  background: #13aa52; color: #fff; border: none; border-radius: 8px; cursor: pointer;
+}
+.task-form button:hover { background: #0e8c43; }
+.task-list { list-style: none; padding: 0; margin: 0; }
+.task-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 4px; border-bottom: 1px solid #eef0f3;
+}
+.task-item label { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.task-item input { width: 18px; height: 18px; accent-color: #13aa52; }
+.task-item.done span { text-decoration: line-through; color: #9ca3af; }
+.delete {
+  background: none; border: none; color: #9ca3af; font-size: 1rem; cursor: pointer;
+}
+.delete:hover { color: #dc2626; }
+.error { color: #dc2626; background: #fef2f2; padding: 8px 12px; border-radius: 6px; }
+.muted { color: #9ca3af; text-align: center; padding: 16px 0; }
